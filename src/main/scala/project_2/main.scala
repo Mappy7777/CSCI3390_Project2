@@ -151,7 +151,7 @@ object main{
       println("BJKST Algorithm. Bucket Size:"+ args(2) + ". Trials:" + args(3) +". Time elapsed:" + durationSeconds + "s. Estimate: "+ans)
       println("==================================")
     }*/
-    else if(args(1)=="tidemark") {
+    if(args(1)=="tidemark") {
       if(args.length != 3) {
         println("Usage: project_2 input_path tidemark trials")
         sys.exit(1)

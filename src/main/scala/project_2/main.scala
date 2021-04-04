@@ -63,7 +63,7 @@ object main{
     }
   }
 
-  class BJKSTSketch(bucket_in: Set[(String, Int)] ,  z_in: Int, bucket_size_in: Int) extends Serializable {
+  /*class BJKSTSketch(bucket_in: Set[(String, Int)] ,  z_in: Int, bucket_size_in: Int) extends Serializable {
 /* A constructor that requies intialize the bucket and the z value. The bucket size is the bucket size of the sketch. */
 
     var bucket: Set[(String, Int)] = bucket_in
@@ -83,7 +83,7 @@ object main{
     def add_string(s: String, z_of_s: Int): BJKSTSketch = {   /* add a string to the sketch */
 
     }
-  }
+  }*/
 
 
   def tidemark(x: RDD[String], trials: Int): Double = {
@@ -99,14 +99,14 @@ object main{
   }
 
 
-  def BJKST(x: RDD[String], width: Int, trials: Int) : Double = {
+  /*def BJKST(x: RDD[String], width: Int, trials: Int) : Double = {
 
-  }
+  }*/
 
 
-  def Tug_of_War(x: RDD[String], width: Int, depth:Int) : Long = {
+  /*def Tug_of_War(x: RDD[String], width: Int, depth:Int) : Long = {
 
-  }
+  }*/
 
 
   def exact_F0(x: RDD[String]) : Long = {
@@ -116,7 +116,8 @@ object main{
 
 
   def exact_F2(x: RDD[String]) : Long = {
-
+    val ans = x.map(z => (z, 1.toLong)).reduceByKey(_ + _).map(z => z._2*z._2).reduce(_ + _);
+    return ans
   }
 
 
@@ -136,7 +137,7 @@ object main{
 
     val startTimeMillis = System.currentTimeMillis()
 
-    if(args(1)=="BJKST") {
+    /*if(args(1)=="BJKST") {
       if (args.length != 4) {
         println("Usage: project_2 input_path BJKST #buckets trials")
         sys.exit(1)
@@ -149,7 +150,7 @@ object main{
       println("==================================")
       println("BJKST Algorithm. Bucket Size:"+ args(2) + ". Trials:" + args(3) +". Time elapsed:" + durationSeconds + "s. Estimate: "+ans)
       println("==================================")
-    }
+    }*/
     else if(args(1)=="tidemark") {
       if(args.length != 3) {
         println("Usage: project_2 input_path tidemark trials")
@@ -164,7 +165,7 @@ object main{
       println("==================================")
 
     }
-    else if(args(1)=="ToW") {
+    /*else if(args(1)=="ToW") {
        if(args.length != 4) {
          println("Usage: project_2 input_path ToW width depth")
          sys.exit(1)
@@ -175,7 +176,7 @@ object main{
       println("==================================")
       println("Tug-of-War F2 Approximation. Width :" +  args(2) + ". Depth: "+ args(3) + ". Time elapsed:" + durationSeconds + "s. Estimate: "+ans)
       println("==================================")
-    }
+    }*/
     else if(args(1)=="exactF2") {
       if(args.length != 2) {
         println("Usage: project_2 input_path exactF2")

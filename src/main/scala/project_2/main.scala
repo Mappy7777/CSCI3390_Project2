@@ -63,7 +63,7 @@ object main{
     }
   }
 
-  /*class BJKSTSketch(bucket_in: Set[(String, Int)] ,  z_in: Int, bucket_size_in: Int) extends Serializable {
+  class BJKSTSketch(bucket_in: Set[(String, Int)] ,  z_in: Int, bucket_size_in: Int) extends Serializable {
 /* A constructor that requies intialize the bucket and the z value. The bucket size is the bucket size of the sketch. */
 
     var bucket: Set[(String, Int)] = bucket_in
@@ -77,13 +77,26 @@ object main{
     }
 
     def +(that: BJKSTSketch): BJKSTSketch = {    /* Merging two sketches */
-
+      z = scala.math.max(z, that.z)
+      bucket = bucket union that.bucket
+      while(bucket.size >= bucket_size_in) {
+        z = z + 1
+        bucket = bucket.filter(x => {x._2 >= z})
+      }
+      return this
     }
 
     def add_string(s: String, z_of_s: Int): BJKSTSketch = {   /* add a string to the sketch */
-
+      if (z_of_s >= z) {
+        bucket = bucket union Set((s, z_of_s))
+        while(bucket.size >= bucket_size_in) {
+          z = z + 1
+          bucket = bucket.filter(x => {x._2 >= z})
+        }
+      }
+      return this
     }
-  }*/
+  }
 
 
   def tidemark(x: RDD[String], trials: Int): Double = {
@@ -99,14 +112,29 @@ object main{
   }
 
 
-  /*def BJKST(x: RDD[String], width: Int, trials: Int) : Double = {
+  def BJKST(x: RDD[String], width: Int, trials: Int) : Double = {
+    val hash1 = Seq.fill(trials)(new hash_function(2000000000))
+    def param0 = (accu1: Seq[BJKSTSketch], accu2: Seq[BJKSTSketch]) => Seq.range(0,trials).map(i => (accu1(i) + accu2(i)))
+    def param1 = (accu1: Seq[BJKSTSketch], s: String) => Seq.range(0,trials).map(i => accu1(i).add_string(s, hash1(i).zeroes(hash1(i).hash(s))))
+    val x3 = x.aggregate(Seq.fill(trials)(new BJKSTSketch("dummy", 0, width)))( param1, param0)
+    val ans = x3.map(sketch => scala.math.pow(2,sketch.z.toDouble)*sketch.bucket.size).sortWith(_ < _)( trials/2) 
+    return ans
+  }
 
-  }*/
 
-
-  /*def Tug_of_War(x: RDD[String], width: Int, depth:Int) : Long = {
-
-  }*/
+  def Tug_of_War(x: RDD[String], width: Int, depth:Int) : Long = {
+    val estimates = new Array[Double](depth)
+    var j = 0
+      for (j<- 1 until depth) {
+      val h = Seq.fill(width)(new four_universal_Radamacher_hash_function)
+      def param0 = (accu1: Seq[Int], accu2: Seq[Int]) => Seq.range(0,width).map(i => accu1(i) + accu2(i))
+      def param1 = (accu1: Seq[Int], s: String) => Seq.range(0,width).map( i =>  accu1(i) + h(i).hash(s).toInt)
+      val x3 = x.aggregate(Seq.fill(width)(0))( param1, param0)
+      val t = x3.map(z => scala.math.pow(z,2))  
+      estimates(j) = t.sum / t.size
+      }
+    return estimates.sortWith(_ < _)(depth/2).toLong
+  }
 
 
   def exact_F0(x: RDD[String]) : Long = {
@@ -118,6 +146,7 @@ object main{
   def exact_F2(x: RDD[String]) : Long = {
     val ans = x.map(z => (z, 1.toLong)).reduceByKey(_ + _).map(z => z._2*z._2).reduce(_ + _);
     return ans
+
   }
 
 
@@ -131,13 +160,13 @@ object main{
     }
     val input_path = args(0)
 
-    val df = spark.read.format("csv").load("data/2014to2017.csv")
-    //val df = spark.read.format("csv").load(input_path)
+  //    val df = spark.read.format("csv").load("data/2014to2017.csv")
+    val df = spark.read.format("csv").load(input_path)
     val dfrdd = df.rdd.map(row => row.getString(0))
 
     val startTimeMillis = System.currentTimeMillis()
 
-    /*if(args(1)=="BJKST") {
+    if(args(1)=="BJKST") {
       if (args.length != 4) {
         println("Usage: project_2 input_path BJKST #buckets trials")
         sys.exit(1)
@@ -150,8 +179,8 @@ object main{
       println("==================================")
       println("BJKST Algorithm. Bucket Size:"+ args(2) + ". Trials:" + args(3) +". Time elapsed:" + durationSeconds + "s. Estimate: "+ans)
       println("==================================")
-    }*/
-    if(args(1)=="tidemark") {
+    }
+    else if(args(1)=="tidemark") {
       if(args.length != 3) {
         println("Usage: project_2 input_path tidemark trials")
         sys.exit(1)
@@ -165,7 +194,7 @@ object main{
       println("==================================")
 
     }
-    /*else if(args(1)=="ToW") {
+    else if(args(1)=="ToW") {
        if(args.length != 4) {
          println("Usage: project_2 input_path ToW width depth")
          sys.exit(1)
@@ -176,7 +205,7 @@ object main{
       println("==================================")
       println("Tug-of-War F2 Approximation. Width :" +  args(2) + ". Depth: "+ args(3) + ". Time elapsed:" + durationSeconds + "s. Estimate: "+ans)
       println("==================================")
-    }*/
+    }
     else if(args(1)=="exactF2") {
       if(args.length != 2) {
         println("Usage: project_2 input_path exactF2")
@@ -210,4 +239,3 @@ object main{
 
   }
 }
-
